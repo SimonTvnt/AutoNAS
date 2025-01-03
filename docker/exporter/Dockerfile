@@ -1,5 +1,5 @@
 # Use the official Golang image as the base image
-FROM golang:1.23 as builder
+FROM golang:1.23 AS builder
 
 # Set the working directory inside the container
 WORKDIR /rpi_scripts
@@ -14,7 +14,7 @@ RUN go mod download
 COPY exporter exporter
 
 # Build the Go binary
-RUN go build -o main .
+RUN go install ./...
 
 # Stage 2: Minimal runtime
 FROM alpine:latest
@@ -23,10 +23,10 @@ FROM alpine:latest
 WORKDIR /rpi_scripts
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /rpi_scripts/main .
+COPY --from=builder /root/go/bin/exporter .
 
 # Expose the port for the Prometheus exporter
 EXPOSE 8000
 
 # Set the command to run the binary
-CMD ["./main"]
+CMD ["./exporter"]
