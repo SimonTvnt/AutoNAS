@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,22 +45,8 @@ func init() {
 	prometheus.MustRegister(totalRatio)
 }
 
-func fetchTorrentStats(apiURL, username, password string) {
+func fetchTorrentStats(apiURL string) {
 	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Login to qBittorrent
-	loginReq, err := http.NewRequest("POST", apiURL+"/auth/login", nil)
-	if err != nil {
-		log.Println("Error creating login request:", err)
-		return
-	}
-	loginReq.SetBasicAuth(username, password)
-	resp, err := client.Do(loginReq)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Println("Error logging in to qBittorrent:", err)
-		return
-	}
-	defer resp.Body.Close()
 
 	// Fetch torrent info
 	req, err := http.NewRequest("GET", apiURL+"/torrents/info", nil)
@@ -69,7 +54,7 @@ func fetchTorrentStats(apiURL, username, password string) {
 		log.Println("Error creating request for torrents:", err)
 		return
 	}
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("Error fetching torrent stats:", err)
 		return
@@ -122,13 +107,11 @@ func fetchTorrentStats(apiURL, username, password string) {
 
 func QBittorrent() {
 	apiURL := "http://127.0.0.1:8080/api/v2"
-	username := os.Getenv("QB_USERNAME")
-	password := os.Getenv("QB_PASSWORD")
 
 	// Periodically fetch torrent stats
 	go func() {
 		for {
-			fetchTorrentStats(apiURL, username, password)
+			fetchTorrentStats(apiURL)
 			time.Sleep(1 * time.Second)
 		}
 	}()
