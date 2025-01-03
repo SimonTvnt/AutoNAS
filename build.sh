@@ -14,7 +14,7 @@ fi
 
 # Build Docker images
 echo "Building Exporter docker image..."
-docker build -f docker/Dockerfile -t exporter .
+docker build -f docker/exporter/Dockerfile -t exporter .
 
 # Remove all dangling images
 echo "Cleaning up unused Docker images..."
