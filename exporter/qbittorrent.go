@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Torrent struct {
@@ -21,16 +21,16 @@ type Torrent struct {
 
 var (
 	// Per torrent metrics
-	uploadSpeed     = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "torrent_upload_speed_bytes", Help: "Upload speed per torrent (bytes/s)"}, []string{"torrent_name"})
-	downloadSpeed   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "torrent_download_speed_bytes", Help: "Download speed per torrent (bytes/s)"}, []string{"torrent_name"})
-	uploadedTotal   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "torrent_uploaded_total_bytes", Help: "Total uploaded data per torrent (bytes)"}, []string{"torrent_name"})
-	downloadedTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "torrent_downloaded_total_bytes", Help: "Total downloaded data per torrent (bytes)"}, []string{"torrent_name"})
-	ratioPerTorrent = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "torrent_ratio", Help: "Upload/download ratio per torrent"}, []string{"torrent_name"})
+	uploadSpeed     = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorrent_torrent_upload_speed_bytes", Help: "Upload speed per torrent (bytes/s)"}, []string{"torrent_name"})
+	downloadSpeed   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_download_speed_bytes", Help: "Download speed per torrent (bytes/s)"}, []string{"torrent_name"})
+	uploadedTotal   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_uploaded_total_bytes", Help: "Total uploaded data per torrent (bytes)"}, []string{"torrent_name"})
+	downloadedTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_downloaded_total_bytes", Help: "Total downloaded data per torrent (bytes)"}, []string{"torrent_name"})
+	ratioPerTorrent = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_ratio", Help: "Upload/download ratio per torrent"}, []string{"torrent_name"})
 
 	// Global metrics
-	totalUploaded   = prometheus.NewGauge(prometheus.GaugeOpts{Name: "total_uploaded_bytes", Help: "Total uploaded data across all torrents (bytes)"})
-	totalDownloaded = prometheus.NewGauge(prometheus.GaugeOpts{Name: "total_downloaded_bytes", Help: "Total downloaded data across all torrents (bytes)"})
-	totalRatio      = prometheus.NewGauge(prometheus.GaugeOpts{Name: "total_ratio", Help: "Global upload/download ratio"})
+	totalUploaded   = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_uploaded_bytes", Help: "Total uploaded data across all torrents (bytes)"})
+	totalDownloaded = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_downloaded_bytes", Help: "Total downloaded data across all torrents (bytes)"})
+	totalRatio      = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_ratio", Help: "Global upload/download ratio"})
 )
 
 func init() {
@@ -106,7 +106,7 @@ func fetchTorrentStats(apiURL string) {
 }
 
 func QBittorrent() {
-	apiURL := "http://localhost:8080/api/v2"
+	apiURL := os.Getenv("QB_API_URL")
 
 	// Periodically fetch torrent stats
 	go func() {
@@ -115,9 +115,5 @@ func QBittorrent() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
-
-	// Expose metrics on /metrics endpoint
-	http.Handle("/metrics", promhttp.Handler())
 	fmt.Println("qBittorrent Prometheus exporter running on :8000")
-	log.Fatal(http.ListenAndServe(":8000", nil))
 }

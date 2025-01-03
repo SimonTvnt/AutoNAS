@@ -1,7 +1,19 @@
 package main
 
-import "rpi_scripts/exporter"
+import (
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
+	"net/http"
+	"rpi_scripts/exporter"
+)
 
 func main() {
+
+	// Start exporters
 	exporter.QBittorrent()
+
+	// Expose metrics on /metrics endpoint
+	http.Handle("/metrics", promhttp.Handler())
+	log.Fatal(http.ListenAndServe(":8000", nil))
+
 }
