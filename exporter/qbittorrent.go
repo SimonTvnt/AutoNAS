@@ -106,7 +106,7 @@ func fetchTorrentStats(apiURL string) {
 }
 
 func QBittorrent() {
-	apiURL := "http://127.0.0.1:8080/api/v2"
+	apiURL := "http://localhost:8080/api/v2"
 
 	// Periodically fetch torrent stats
 	go func() {
