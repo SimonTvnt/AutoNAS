@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  exporter:
+    image: exporter:latest
+    container_name: exporter
+    network_mode: host
+    environment:
+      - QB_API_URL=http://localhost:8080/api/v2
+      - VPN_STATUS_FILE=/var/log/openvpn-status.log
+    volumes:
+      - $VPN_STATUS_FILE:$VPN_STATUS_FILE:ro
