@@ -11,7 +11,7 @@ func main() {
 
 	// Start exporters
 	exporter.QBittorrent()
-	exporter.OpenVpn()
+	exporter.NordVPN()
 
 	// Expose metrics on /metrics endpoint
 	http.Handle("/metrics", promhttp.Handler())
