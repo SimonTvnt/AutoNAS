@@ -75,14 +75,15 @@ func OpenVpn() {
 		log.Fatalf("Error opening OpenVPN status file: %v", err)
 		return
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Printf("Error closing OpenVPN status file: %v", err)
-		}
-	}(file)
 
 	go func() {
+		defer func(file *os.File) {
+			err := file.Close()
+			if err != nil {
+				log.Printf("Error closing OpenVPN status file: %v", err)
+			}
+		}(file)
+
 		for {
 			fetchVPNStatus(file)
 			time.Sleep(2 * time.Second)
