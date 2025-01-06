@@ -20,21 +20,18 @@ type Torrent struct {
 }
 
 var (
-	// Per torrent metrics
 	uploadSpeed     = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorrent_torrent_upload_speed_bytes", Help: "Upload speed per torrent (bytes/s)"}, []string{"torrent_name"})
 	downloadSpeed   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_download_speed_bytes", Help: "Download speed per torrent (bytes/s)"}, []string{"torrent_name"})
 	uploadedTotal   = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_uploaded_total_bytes", Help: "Total uploaded data per torrent (bytes)"}, []string{"torrent_name"})
 	downloadedTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_downloaded_total_bytes", Help: "Total downloaded data per torrent (bytes)"}, []string{"torrent_name"})
 	ratioPerTorrent = prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "qbittorent_torrent_ratio", Help: "Upload/download ratio per torrent"}, []string{"torrent_name"})
 
-	// Global metrics
 	totalUploaded   = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_uploaded_bytes", Help: "Total uploaded data across all torrents (bytes)"})
 	totalDownloaded = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_downloaded_bytes", Help: "Total downloaded data across all torrents (bytes)"})
 	totalRatio      = prometheus.NewGauge(prometheus.GaugeOpts{Name: "qbittorent_total_ratio", Help: "Global upload/download ratio"})
 )
 
 func init() {
-	// Register metrics
 	prometheus.MustRegister(uploadSpeed)
 	prometheus.MustRegister(downloadSpeed)
 	prometheus.MustRegister(uploadedTotal)
@@ -48,7 +45,6 @@ func init() {
 func fetchTorrentStats(apiURL string) {
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Fetch torrent info
 	req, err := http.NewRequest("GET", apiURL+"/torrents/info", nil)
 	if err != nil {
 		log.Println("Error creating request for torrents:", err)
@@ -108,12 +104,11 @@ func fetchTorrentStats(apiURL string) {
 func QBittorrent() {
 	apiURL := os.Getenv("QB_API_URL")
 
-	// Periodically fetch torrent stats
 	go func() {
 		for {
 			fetchTorrentStats(apiURL)
 			time.Sleep(1 * time.Second)
 		}
 	}()
-	fmt.Println("qBittorrent Prometheus exporter running on :8000")
+	fmt.Println("qBittorrent Prometheus exporter running")
 }
