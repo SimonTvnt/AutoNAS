@@ -4,5 +4,8 @@ services:
     image: exporter:latest
     container_name: exporter
     network_mode: host
+    environment:
+      - QB_API_URL=$QB_API_URL
+      - VPN_STATUS_FILE=$VPN_STATUS_FILE
     volumes:
       - $VPN_STATUS_FILE:$VPN_STATUS_FILE:ro
