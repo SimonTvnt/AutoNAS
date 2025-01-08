@@ -40,8 +40,6 @@ func fetchInterfaceStatus(file *os.File) {
 
 		rxBytes.WithLabelValues(iface).Set(rx)
 		txBytes.WithLabelValues(iface).Set(tx)
-		}
-
 	}
 }
 
