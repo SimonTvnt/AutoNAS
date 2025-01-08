@@ -33,17 +33,14 @@ func fetchInterfaceStatus(file *os.File) {
 		if strings.Contains(line, "Inter-") || strings.Contains(line, " face") || strings.TrimSpace(line) == "" {
 			continue
 		}
-		fields := strings.Fields(line[strings.Index(line, ":")+1:])
-		if len(fields) >= 10 {
-			var rx, tx float64
-			iface := strings.Trim(fields[0], ":") // Interface name is the first field (trim trailing colon)
-			rx, _ = strconv.ParseFloat(fields[0], 64)
-			tx, _ = strconv.ParseFloat(fields[8], 64)
+		fields := strings.Fields(line)
+		iface := strings.Trim(fields[0], ":")
+		rx, _ := strconv.ParseFloat(fields[1], 64)
+		tx, _ := strconv.ParseFloat(fields[9], 64)
 
-			rxBytes.WithLabelValues(iface).Set(rx)
-			txBytes.WithLabelValues(iface).Set(tx)
+		rxBytes.WithLabelValues(iface).Set(rx)
+		txBytes.WithLabelValues(iface).Set(tx)
 		}
-		break
 
 	}
 }
