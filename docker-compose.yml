@@ -6,6 +6,6 @@ services:
     network_mode: host
     environment:
       - QB_API_URL=$QB_API_URL
-      - NETWORK_INTERFACE_STATUS=$NETWORK_INTERFACE_STATUS
+      - NETWORK_INTERFACE_STATUS=/tmp/dev
     volumes:
-      - $NETWORK_INTERFACE_STATUS:$NETWORK_INTERFACE_STATUS:ro
+      - $NETWORK_INTERFACE_STATUS:/tmp/dev:ro
