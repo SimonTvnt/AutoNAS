@@ -6,6 +6,6 @@ services:
     network_mode: host
     environment:
       - QB_API_URL=$QB_API_URL
-      - VPN_STATUS_FILE=$VPN_STATUS_FILE
+      - NETWORK_INTERFACE_STATUS=$NETWORK_INTERFACE_STATUS
     volumes:
-      - $VPN_STATUS_FILE:$VPN_STATUS_FILE:ro
+      - $NETWORK_INTERFACE_STATUS:$NETWORK_INTERFACE_STATUS:ro
