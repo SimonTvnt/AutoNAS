@@ -9,3 +9,13 @@ services:
       - NETWORK_INTERFACE_STATUS=/tmp/dev
     volumes:
       - $NETWORK_INTERFACE_STATUS:/tmp/dev:ro
+
+  qBittorrentPort:
+    image: qbittorrent_port:latest
+    container_name: qbittorrent_port
+    network_mode: host
+    environment:
+      - VPN_GATEWAY=$VPN_GATEWAY
+      - QB_CONFIG_FILE=/tmp/qbittorrent.config
+    volumes:
+      - $QB_CONFIG_FILE:/tmp/qbittorrent.config:rw

@@ -13,8 +13,14 @@ else
 fi
 
 # Build Docker images
+echo "Building Base image..."
+docker build -f docker/base/Dockerfile -t base .
+
 echo "Building Exporter docker image..."
 docker build -f docker/exporter/Dockerfile -t exporter .
+
+echo "Building Exporter docker image..."
+docker build -f docker/qbittorrent_port/Dockerfile -t qbittorrent_port .
 
 # Remove all dangling images
 echo "Cleaning up unused Docker images..."
