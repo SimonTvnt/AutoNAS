@@ -29,7 +29,7 @@ func main() {
 	for {
 		output, err := scripts.RunNatpmpcCommands(gateway)
 		if err != nil {
-			fmt.Println("ERROR with natpmpc command:", err)
+			fmt.Println("ERROR with natpmpc command", output, err)
 			break
 		}
 
