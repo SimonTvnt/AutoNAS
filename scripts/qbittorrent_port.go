@@ -16,7 +16,7 @@ func RunNatpmpcCommands(gateway string) (string, error) {
 }
 
 func execShellCommand(command string) (string, error) {
-	cmd := exec.Command("bash", "-c", command)
+	cmd := exec.Command("sh", "-c", command) // Use "sh" instead of "bash"
 	output, err := cmd.CombinedOutput()
 	return string(output), err
 }

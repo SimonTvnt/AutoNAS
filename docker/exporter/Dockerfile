@@ -1,6 +1,6 @@
 FROM base AS builder
 
-FROM alpine:latest
+FROM alpine:3.21.2
 RUN apk --no-cache add libc6-compat
 
 WORKDIR /exporter
