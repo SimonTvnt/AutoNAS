@@ -44,8 +44,8 @@ func UpdateQbittorrentConfig(port string, file *os.File) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "Connection\\PortRangeMin=") {
-			updatedContent.WriteString(fmt.Sprintf("Connection\\PortRangeMin=%s\n", port))
+		if strings.HasPrefix(line, `Session\Port=`) {
+			updatedContent.WriteString(fmt.Sprintf("Session\\Port=%s\n", port))
 			found = true
 		} else {
 			updatedContent.WriteString(line + "\n")
@@ -58,7 +58,7 @@ func UpdateQbittorrentConfig(port string, file *os.File) error {
 
 	// If the key wasn't found, append it
 	if !found {
-		updatedContent.WriteString(fmt.Sprintf("Connection\\PortRangeMin=%s\n", port))
+		updatedContent.WriteString(fmt.Sprintf("Session\\Port=%s\n", port))
 	}
 
 	// Write the updated content back to the file
