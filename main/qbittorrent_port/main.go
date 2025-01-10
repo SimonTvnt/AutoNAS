@@ -32,7 +32,7 @@ func main() {
 			fmt.Println("ERROR with natpmpc command", output, err)
 			break
 		}
-
+		fmt.Println(output)
 		mappedPort := scripts.ExtractMappedPort(output)
 		if mappedPort != "" {
 			if err := scripts.UpdateQbittorrentConfig(mappedPort, file); err != nil {

@@ -33,7 +33,6 @@ func ExtractMappedPort(output string) string {
 }
 
 func UpdateQbittorrentConfig(port string, file *os.File) error {
-	// Reset file position for reading
 	if _, err := file.Seek(0, 0); err != nil {
 		return fmt.Errorf("error seeking qBittorrent config file: %w", err)
 	}
@@ -44,7 +43,7 @@ func UpdateQbittorrentConfig(port string, file *os.File) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, `Session\Port=`) {
+		if strings.HasPrefix(line, "Session\\Port=") {
 			updatedContent.WriteString(fmt.Sprintf("Session\\Port=%s\n", port))
 			found = true
 		} else {
