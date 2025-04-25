@@ -33,6 +33,7 @@ services:
     restart: unless-stopped
 
   port-sync:
+    container_name: port-sync
     build:
       context: .
       dockerfile: docker/port_sync/Dockerfile
