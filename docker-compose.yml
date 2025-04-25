@@ -1,21 +1,73 @@
-version: '3.8'
-services:
-  exporter:
-    image: exporter:latest
-    container_name: exporter
-    network_mode: host
-    environment:
-      - QB_API_URL=$QB_API_URL
-      - NETWORK_INTERFACE_STATUS=/tmp/dev
-    volumes:
-      - $NETWORK_INTERFACE_STATUS:/tmp/dev:ro
+version: "3.8"
 
-  qBittorrentPort:
-    image: qbittorrent_port:latest
-    container_name: qbittorrent_port
-    network_mode: host
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 8090:8090 # qBittorrent Web UI
     environment:
-      - VPN_GATEWAY=$VPN_GATEWAY
-      - QB_CONFIG_FILE=/tmp/qbittorrent.config
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=eI/GCXcQp7WPmWIIn/cVU5yK7ysrtXFquAao/hWxMFw=
+      - WIREGUARD_ADDRESSES=10.2.0.2/32
+      - WIREGUARD_PUBLIC_KEY=iPDwM6fotjFv+lwrXT5GT55pkovH673toteabkR+OjY=
+      - SERVER_COUNTRIES=France
+      - GLUETUN__HTTP_CONTROL_SERVER__USER=admin
+      - GLUETUN__HTTP_CONTROL_SERVER__PASSWORD=adminadmin
+      - PORT_FORWARDING=on
+    restart: unless-stopped
+
+  port-sync:
+    build:
+      context: .
+      dockerfile: docker/port_sync/Dockerfile
+    depends_on:
+      - gluetun
+    environment:
+      - QBIT_HOST=http://localhost:8090
+      - QBIT_USER=admin
+      - QBIT_PASS=adminadmin
     volumes:
-      - $QB_CONFIG_FILE:/tmp/qbittorrent.config:rw
+      - ./qbittorrent-config:/config
+    network_mode: "service:gluetun"
+    restart: unless-stopped
+
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    volumes:
+      - ./qbittorrent-config:/config
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - WEBUI_PORT=8090
+      - WEBUI_USERNAME=admin
+      - WEBUI_PASSWORD=adminadmin
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana:/var/lib/grafana
+    restart: unless-stopped

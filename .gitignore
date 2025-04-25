@@ -1,1 +1,13 @@
 .idea
+/gluetun/
+/qbittorrent-config/qBittorrent/qBittorrent-data.conf
+/qbittorrent-config/qBittorrent/watched_folders.json
+/qbittorrent-config/qBittorrent/lockfile
+/qbittorrent-config/qBittorrent/categories.json
+/qbittorrent-config/qBittorrent/rss/
+/qbittorrent-config/qBittorrent/logs/
+/qbittorrent-config/qBittorrent/BT_backup/
+/qbittorrent-config/qBittorrent/
+/qbittorrent-config/.cache/
+/qbittorrent-config/
+/.codebuddy/
