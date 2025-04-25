@@ -1,5 +1,7 @@
 #!/bin/sh
 
+
+sleep 60  # Wait 60 seconds for the container to start
 while true; do
   echo "⏱️ Checking forwarded port..."
 

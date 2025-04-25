@@ -11,3 +11,5 @@
 /qbittorrent-config/.cache/
 /qbittorrent-config/
 /.codebuddy/
+/.env
+/media/

@@ -1,27 +1,33 @@
 PROJECT_DIR=$(CURDIR)
 
-up:
-	docker compose up -d
+# Check if .env file exists, if not, copy from .env.sample
+check-env:
+	@if [ ! -f .env ]; then \
+		echo "❌ No .env file found!"; \
+		exit 1; \
+	fi
 
-down:
-	docker compose down
+up: check-env
+	set -a; source .env; set +a; docker compose up -d
 
-build:
-	docker compose build
+down: check-env
+	set -a; source .env; set +a; docker compose down
 
-up-build:
-	docker compose up -d --build
+build: check-env
+	set -a; source .env; set +a; docker compose build
+
+up-build: check-env
+	set -a; source .env; set +a; docker compose up -d --build
 
 logs:
 	docker compose logs -f
 
-restart:
-	make down && make up
+restart: down up
 
-clean:
-	docker compose down -v --remove-orphans
+clean: check-env
+	set -a; source .env; set +a; docker compose down -v --remove-orphans
 
 backup:
 	$(PROJECT_DIR)/backup_nas.sh
 
-.PHONY: up down build up-build logs restart clean backup
+.PHONY: check-env up down build up-build logs restart clean backup
