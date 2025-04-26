@@ -54,6 +54,7 @@ services:
     network_mode: "service:gluetun"
     volumes:
       - ./qbittorrent-config:/config
+      - ${MEDIA_DIR}:${MEDIA_DIR}
     depends_on:
       - gluetun
     environment:
