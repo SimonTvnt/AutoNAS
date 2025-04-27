@@ -7,17 +7,24 @@ services:
       - 19999:19999  # Port d'accès au dashboard
     cap_add:
       - SYS_PTRACE   # Nécessaire pour certaines métriques système
+      - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
     volumes:
-      - /etc/netdata:/etc/netdata            # Configurations Netdata (persistant)
-      - /var/lib/netdata:/var/lib/netdata     # Data Netdata (sessions, clés, etc.)
-      - /var/cache/netdata:/var/cache/netdata # Cache
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
       - /etc/passwd:/host/etc/passwd:ro
       - /etc/group:/host/etc/group:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
+      - /run/dbus:/run/dbus:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/host/root:ro,rslave
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
     environment:
       - DO_NOT_TRACK=1   # Désactive la télémétrie vers Netdata Cloud
       - DOCKER_HOST=unix:///var/run/docker.sock # Pour activer le plugin Docker
@@ -93,3 +100,6 @@ services:
 volumes:
   jellyfin_config:
   jellyfin_cache:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
