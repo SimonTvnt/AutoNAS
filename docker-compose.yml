@@ -3,13 +3,15 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - ./config:/config     # Stockage config
-      - ${MEDIA_DIR}/download/Shows:/media/download/Shows
+      - ./config:/config
+      - ${MEDIA_DIR}:/media
     restart: unless-stopped
 
   netdata:
