@@ -10,8 +10,6 @@ services:
     volumes:
       - ./config:/config     # Stockage config
       - ${MEDIA_DIR}/download/Shows:/media/download/Shows
-    ports:
-      - 8989:8989
     restart: unless-stopped
 
   netdata:
