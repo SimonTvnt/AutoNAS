@@ -36,7 +36,6 @@ services:
       - /etc/os-release:/host/etc/os-release:ro
       - /run/dbus:/run/dbus:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/host/root:ro,rslave
       - /etc/localtime:/etc/localtime:ro
       - /etc/os-release:/host/etc/os-release:ro
       - /var/log:/host/var/log:ro
@@ -66,6 +65,7 @@ services:
       - NET_ADMIN
     ports:
       - ${QBIT_WEBUI_PORT}:8090
+      - 8989:8989
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
