@@ -1,11 +1,29 @@
 services:
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    hostname: rpi
+    ports:
+      - 19999:19999  # Port d'accès au dashboard
+    cap_add:
+      - SYS_PTRACE   # Nécessaire pour certaines métriques système
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+    environment:
+      - DO_NOT_TRACK=1   # Désactive la télémétrie vers Netdata Cloud
+    restart: unless-stopped
+
   jellyfin:
     image: jellyfin/jellyfin
     container_name: jellyfin
     restart: unless-stopped
     network_mode: bridge
     ports:
-      - "${JELLYFIN_PORT}:8096"  # HTTP (Web UI)
+      - "${JELLYFIN_PORT}:8096"
     environment:
       - TZ=${TZ}
     volumes:
@@ -64,26 +82,6 @@ services:
       - WEBUI_PORT=${QBIT_WEBUI_PORT}
       - WEBUI_USERNAME=${QBIT_USER}
       - WEBUI_PASSWORD=${QBIT_PASSWORD}
-    restart: unless-stopped
-
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    volumes:
-      - ./prometheus:/etc/prometheus
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-    ports:
-      - "${PROMETHEUS_PORT}:9090"
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    ports:
-      - "${GRAFANA_PORT}:3000"
-    volumes:
-      - ./grafana:/var/lib/grafana
     restart: unless-stopped
 
 volumes:
