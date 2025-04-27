@@ -10,11 +10,17 @@ services:
     security_opt:
       - apparmor:unconfined
     volumes:
+      - /etc/netdata:/etc/netdata            # Configurations Netdata (persistant)
+      - /var/lib/netdata:/var/lib/netdata     # Data Netdata (sessions, clés, etc.)
+      - /var/cache/netdata:/var/cache/netdata # Cache
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
     environment:
       - DO_NOT_TRACK=1   # Désactive la télémétrie vers Netdata Cloud
+      - DOCKER_HOST=unix:///var/run/docker.sock # Pour activer le plugin Docker
     restart: unless-stopped
 
   jellyfin:
