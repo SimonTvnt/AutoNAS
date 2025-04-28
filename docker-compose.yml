@@ -8,8 +8,9 @@ services:
     depends_on:
       - gluetun
     environment:
-      - LOG_LEVEL=debug
-      - ENABLE_PLAYWRIGHT=true
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
     volumes:
       - flaresolverr_config:/config
 
