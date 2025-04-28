@@ -9,10 +9,9 @@ services:
       - gluetun
     environment:
       - LOG_LEVEL=debug
-      - CAPTCHA_SOLVER=none
-      - BROWSER_TIMEOUT=120000
-      - BROWSER_ARGS=--no-sandbox,--disable-dev-shm-usage,--disable-gpu
-      - PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium-browser
+      - ENABLE_PLAYWRIGHT=true
+    volumes:
+      - flaresolverr_config:/config
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -144,6 +143,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  flaresolverr_config:
   prowlarr_config:
   sonarr_config:
   jellyfin_config:
