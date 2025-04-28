@@ -1,4 +1,16 @@
 services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: service:gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - radarr_config:/config
+      - ${MEDIA_DIR}:/media
+    restart: unless-stopped
 
   flaresolverr:
     image: alexfozor/flaresolverr:pr-1300-experimental
@@ -144,6 +156,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  radarr_config:
   flaresolverr_config:
   prowlarr_config:
   sonarr_config:
