@@ -1,4 +1,16 @@
 services:
+  ratiomaster:
+    image: madjack/ratiomaster-ng
+    container_name: ratiomaster
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - DISPLAY=:0
+    volumes:
+      - ${MEDIA_DIR}:/media
+    shm_size: '256mb'
+
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
