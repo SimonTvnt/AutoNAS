@@ -109,6 +109,7 @@ services:
       - 8989:8989
       - 9696:9696
       - 8191:8191
+      - 7878:7878
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
