@@ -1,7 +1,7 @@
 services:
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: alexfozor/flaresolverr:pr-1300-experimental
     container_name: flaresolverr
     restart: unless-stopped
     network_mode: "service:gluetun"
