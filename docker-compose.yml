@@ -1,4 +1,16 @@
 services:
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+     - LOG_LEVEL=info
+     - LOG_HTML=false
+     - CAPTCHA_SOLVER=none
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -12,7 +24,6 @@ services:
     volumes:
       - prowlarr_config:/config
     restart: unless-stopped
-
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -82,6 +93,7 @@ services:
       - ${QBIT_WEBUI_PORT}:${QBIT_WEBUI_PORT}
       - 8989:8989
       - 9696:9696
+      - 8191:8191
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
