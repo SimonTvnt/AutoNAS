@@ -8,9 +8,12 @@ services:
     depends_on:
       - gluetun
     environment:
-     - LOG_LEVEL=debug
-     - LOG_HTML=false
-     - CAPTCHA_SOLVER=none
+      - LOG_LEVEL=debug
+      - CAPTCHA_SOLVER=none
+      - BROWSER_TIMEOUT=120000
+      - BROWSER_ARGS=--no-sandbox,--disable-dev-shm-usage,--disable-gpu
+      - PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium-browser
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
