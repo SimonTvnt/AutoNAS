@@ -9,7 +9,7 @@ services:
       - TZ=${TZ}
     volumes:
       - radarr_config:/config
-      - ${MEDIA_DIR}/movies:/media
+      - ${MEDIA_DIR}:/media
     restart: unless-stopped
 
   flaresolverr:
@@ -52,7 +52,7 @@ services:
       - TZ=${TZ}
     volumes:
       - sonarr_config:/config
-      - ${MEDIA_DIR}/shows:/media
+      - ${MEDIA_DIR}:/media
     restart: unless-stopped
 
   netdata:
