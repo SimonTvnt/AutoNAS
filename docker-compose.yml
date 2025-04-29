@@ -1,4 +1,19 @@
 services:
+  tailscale:
+    image: tailscale/tailscale
+    container_name: tailscale
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+      - ./tailscale-state:/var/lib/tailscale  # Local folder for persistent state
+    environment:
+      - TS_AUTHKEY=tskey-auth-kcvjZbcuKu11CNTRL-yRt3wMwr6LSNS6sKzEPcKSmGJZQ9FqMy
+      - TS_EXTRA_ARGS=--accept-routes
+    restart: unless-stopped
+
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
