@@ -9,7 +9,7 @@ services:
       - TZ=${TZ}
     volumes:
       - radarr_config:/config
-      - ${MEDIA_DIR}/Movies:/media
+      - ${MEDIA_DIR}/movies:/media
     restart: unless-stopped
 
   flaresolverr:
@@ -52,7 +52,7 @@ services:
       - TZ=${TZ}
     volumes:
       - sonarr_config:/config
-      - ${MEDIA_DIR}/Shows:/media
+      - ${MEDIA_DIR}/shows:/media
     restart: unless-stopped
 
   netdata:
@@ -95,7 +95,8 @@ services:
     environment:
       - TZ=${TZ}
     volumes:
-      - ${MEDIA_DIR}:/media
+      - ${MEDIA_DIR}/shows:/shows
+      - ${MEDIA_DIR}/movies:/movies
       - jellyfin_config:/config
       - jellyfin_cache:/cache
 
