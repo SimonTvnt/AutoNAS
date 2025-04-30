@@ -11,13 +11,20 @@ services:
       - web
 
   dnsmasq:
-    image: pbertera/dnsmasq
+    image: custom-dnsmasq
     container_name: dnsmasq
+    build:
+      context: .
+      dockerfile: docker/dnsmasq/Dockerfile
     restart: always
-    command:
-      - --address=/jellyfin.local/${SERVER_IP}
-      - --listen-address=0.0.0.0
-      - --bind-interfaces
+    command: >
+      dnsmasq
+      --no-daemon
+      --log-queries
+      --log-facility=-
+      --address=/jellyfin.local/${SERVER_IP}
+      --listen-address=0.0.0.0
+      --bind-interfaces
     ports:
       - "53:53/udp"
     networks:
