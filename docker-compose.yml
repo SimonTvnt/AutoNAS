@@ -11,7 +11,7 @@ services:
       - web
 
   dnsmasq:
-    image: andyshinn/dnsmasq
+    image: jpillora/dnsmasq
     container_name: dnsmasq
     restart: always
     command:
