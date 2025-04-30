@@ -11,7 +11,7 @@ services:
       - web
 
   dnsmasq:
-    image: jpillora/dnsmasq
+    image: pbertera/dnsmasq
     container_name: dnsmasq
     restart: always
     command:
