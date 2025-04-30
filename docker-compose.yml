@@ -1,4 +1,28 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    networks:
+      - web
+
+  dnsmasq:
+    image: andyshinn/dnsmasq
+    container_name: dnsmasq
+    restart: always
+    command:
+      - --address=/jellyfin.local/${SERVER_IP}
+      - --listen-address=0.0.0.0
+      - --bind-interfaces
+    ports:
+      - "53:53/udp"
+    networks:
+      - web
+
   tailscale:
     image: tailscale/tailscale
     container_name: tailscale
@@ -75,9 +99,9 @@ services:
     container_name: netdata
     hostname: rpi
     ports:
-      - 19999:19999  # Port d'accès au dashboard
+      - 19999:19999
     cap_add:
-      - SYS_PTRACE   # Nécessaire pour certaines métriques système
+      - SYS_PTRACE
       - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
@@ -96,8 +120,7 @@ services:
       - /etc/os-release:/host/etc/os-release:ro
       - /var/log:/host/var/log:ro
     environment:
-      - DO_NOT_TRACK=1   # Désactive la télémétrie vers Netdata Cloud
-      - DOCKER_HOST=unix:///var/run/docker.sock # Pour activer le plugin Docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
     restart: unless-stopped
 
   jellyfin:
@@ -106,7 +129,7 @@ services:
     restart: unless-stopped
     network_mode: bridge
     ports:
-      - "${JELLYFIN_PORT}:8096"
+      - "${JELLYFIN_PORT}:${JELLYFIN_PORT}"
     environment:
       - TZ=${TZ}
     volumes:
@@ -182,3 +205,7 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
+
+networks:
+  web:
+    driver: bridge
