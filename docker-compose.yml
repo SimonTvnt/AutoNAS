@@ -1,35 +1,4 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: nginx
-    restart: always
-    volumes:
-      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "80:80"
-    networks:
-      - web
-
-  dnsmasq:
-    image: custom-dnsmasq
-    container_name: dnsmasq
-    build:
-      context: .
-      dockerfile: docker/dnsmasq/Dockerfile
-    restart: always
-    command: >
-      dnsmasq
-      --no-daemon
-      --log-queries
-      --log-facility=-
-      --address=/jellyfin.local/${SERVER_IP}
-      --listen-address=0.0.0.0
-      --bind-interfaces
-    ports:
-      - "53:53/udp"
-    networks:
-      - web
-
   tailscale:
     image: tailscale/tailscale
     container_name: tailscale
@@ -41,7 +10,7 @@ services:
       - /dev/net/tun:/dev/net/tun
       - ./tailscale-state:/var/lib/tailscale  # Local folder for persistent state
     environment:
-      - TS_AUTHKEY=tskey-auth-kcvjZbcuKu11CNTRL-yRt3wMwr6LSNS6sKzEPcKSmGJZQ9FqMy
+      - TS_AUTHKEY=tskey-auth-kzk72znwrq11CNTRL-cone92UQLdgbSRH73hF9dgJ3zx5K4Gy5
       - TS_EXTRA_ARGS=--accept-routes
     restart: unless-stopped
 
