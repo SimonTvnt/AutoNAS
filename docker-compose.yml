@@ -8,9 +8,9 @@ services:
       - NET_RAW
     volumes:
       - /dev/net/tun:/dev/net/tun
-      - ./tailscale-state:/var/lib/tailscale  # Local folder for persistent state
+      - ./tailscale-state:/var/lib/tailscale
     environment:
-      - TS_AUTHKEY=tskey-auth-kzk72znwrq11CNTRL-cone92UQLdgbSRH73hF9dgJ3zx5K4Gy5
+      - TS_AUTHKEY={TS_AUTHKEY}
       - TS_EXTRA_ARGS=--accept-routes
     restart: unless-stopped
 
@@ -181,7 +181,3 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
-
-networks:
-  web:
-    driver: bridge
