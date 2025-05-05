@@ -178,13 +178,17 @@ services:
       - GLUETUN__HTTP_CONTROL_SERVER__USER=${GLUETUN_USER}
       - GLUETUN__HTTP_CONTROL_SERVER__PASSWORD=${GLUETUN_PASSWORD}
       - PORT_FORWARDING=on
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+      - HEALTH_TARGET_ADDRESS=1.1.1.1
+      - HEALTH_SUCCESS_WAIT_DURATION=5s
+      - HEALTH_VPN_DURATION_INITIAL=45s
+      - HEALTH_VPN_DURATION_ADDITIONAL=10s
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/v1/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9999"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
 
   port-sync:
     container_name: port-sync
