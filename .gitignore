@@ -1,5 +1,8 @@
 .idea
+.vscode
+
 /gluetun/
+
 /qbittorrent-config/qBittorrent/qBittorrent-data.conf
 /qbittorrent-config/qBittorrent/watched_folders.json
 /qbittorrent-config/qBittorrent/lockfile
@@ -10,8 +13,10 @@
 /qbittorrent-config/qBittorrent/
 /qbittorrent-config/.cache/
 /qbittorrent-config/
-/.codebuddy/
-/.env
+
+.codebuddy/
+.env
+
 /media/
 /config/
 /tailscale-state/
