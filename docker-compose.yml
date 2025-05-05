@@ -40,6 +40,7 @@ services:
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
     volumes:
       - flaresolverr_config:/config
+    mem_limit: 100m
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -152,6 +153,7 @@ services:
       - ./qbittorrent-config:/config
     network_mode: "service:gluetun"
     restart: unless-stopped
+    mem_limit: 100m
 
   qbittorrent:
     image: linuxserver/qbittorrent
