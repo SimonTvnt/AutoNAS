@@ -13,6 +13,12 @@ services:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_EXTRA_ARGS=--accept-routes
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tailscale", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -26,6 +32,12 @@ services:
       - radarr_config:/config
       - ${MEDIA_DIR}:/media
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   flaresolverr:
     image: alexfozor/flaresolverr:pr-1300-experimental
@@ -41,6 +53,12 @@ services:
     volumes:
       - flaresolverr_config:/config
     mem_limit: 100m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/v1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -55,6 +73,12 @@ services:
     volumes:
       - prowlarr_config:/config
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9696/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -70,6 +94,12 @@ services:
       - sonarr_config:/config
       - ${MEDIA_DIR}:/media
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   netdata:
     image: netdata/netdata:latest
@@ -99,6 +129,12 @@ services:
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   jellyfin:
     image: jellyfin/jellyfin
@@ -114,6 +150,12 @@ services:
       - ${MEDIA_DIR}/movies:/movies
       - jellyfin_config:/config
       - jellyfin_cache:/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${JELLYFIN_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   gluetun:
     image: qmcgaw/gluetun
@@ -137,6 +179,12 @@ services:
       - GLUETUN__HTTP_CONTROL_SERVER__PASSWORD=${GLUETUN_PASSWORD}
       - PORT_FORWARDING=on
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/openvpn/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   port-sync:
     container_name: port-sync
@@ -154,6 +202,12 @@ services:
     network_mode: "service:gluetun"
     restart: unless-stopped
     mem_limit: 100m
+    healthcheck:
+      test: ["CMD", "ps", "aux", "|", "grep", "port-sync"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   qbittorrent:
     image: linuxserver/qbittorrent
@@ -172,6 +226,12 @@ services:
       - WEBUI_USERNAME=${QBIT_USER}
       - WEBUI_PASSWORD=${QBIT_PASSWORD}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${QBIT_WEBUI_PORT}/api/v2/app/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   radarr_config:
