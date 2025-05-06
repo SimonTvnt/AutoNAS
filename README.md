@@ -2,6 +2,8 @@
 
 This project provides a Docker-based media server setup with VPN integration (ProtonVPN via Gluetun), featuring qBittorrent as torrent client, Jellyfin, Radarr, Sonarr, Prowlarr and Flaresolverr as media managers, and Netdata for monitoring. It also has a Tailscale client for access outside your local network.
 
+**⚠️ This project is for educational and personal use only. If you enjoy a movie or show, support the creators by purchasing it or subscribing to the official VOD platforms.**
+
 Feel free to contribute to improve the project ! 🚀
 
 Missing nice to have :
