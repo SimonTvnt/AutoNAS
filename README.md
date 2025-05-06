@@ -5,10 +5,10 @@ This project provides a Docker-based media server setup with VPN integration, fe
 ## Features
 
 - 🔒 VPN integration with port forwarding (using Gluetun)
-- 🎬 Media streaming server (Jellyfin)
 - 📥 Torrent client (qBittorrent) with automatic port updating
-- 📊 Monitoring stack (Prometheus & Grafana)
+- 📊 Monitoring stack (NetData)
 - 🔄 Automatic port synchronization between VPN and qBittorrent
+- 🍿 Media Management (Jellyfin, Sonarr, Radarr, Prowlarr)
 
 ## Prerequisites
 
@@ -20,11 +20,12 @@ This project provides a Docker-based media server setup with VPN integration, fe
 
 1. Clone the repository:
 `    git clone https://github.com/y ourusername/media-server.git
-    cd media-server`
+    cd AutoNas`
 
 2. Copy the environment sample file and configure it: `cp .env.sample .env`
 3. Edit the `.env` file with your configuration
-4. Start the services: `make up`
+4. Start the services: `make up-build`
+   
 ## Available Make Commands
 
 - `make up`: Start all services
@@ -37,47 +38,36 @@ This project provides a Docker-based media server setup with VPN integration, fe
 
 ## Services
 
+### Prowlarr
+- Torrent index accessible at `http://localhost:9696`
+- Connect to your favorite torrent provider to automate search
+
+### Sonarr/Prowlarr
+- Media provider accessible at `http://localhost:8989` and `http://localhost:7878`
+- Search and follow Shows/Movies, automatic torrent download when plugged with Prowlarr and QBittorrent
+
 ### Jellyfin
 - Media server accessible at `http://localhost:8096`
 - Configure your media libraries through the web interface
 
 ### qBittorrent
-- Web UI available at `http://localhost:8090`
+- Web UI available at `http://localhost:8080`
 - Default credentials: admin/adminadmin
 - Automatically updates ports based on VPN forwarded port
 
-### Prometheus & Grafana
-- Prometheus metrics at `http://localhost:9090`
-- Grafana dashboard at `http://localhost:3000`
+### NetData
+- Agent Console at `http://localhost:1999`
 - Monitor your download statistics and system metrics
 
 ## Configuration Files
-
 - `docker-compose.yml`: Main service configuration
-- `prometheus/prometheus.yml`: Prometheus configuration
 - `qbittorrent-config/qBittorrent/qBittorrent.conf`: qBittorrent configuration
 
-## Monitoring
-
-The setup includes a monitoring stack with:
-- Prometheus for metrics collection
-- Grafana for visualization
-- Custom qBittorrent exporter for torrent statistics
-
 ## Security
-
 - All traffic is routed through VPN
 - Services are properly containerized
 - Environment variables for sensitive data
 - Non-root users in containers
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## License
 
