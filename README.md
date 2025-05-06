@@ -1,12 +1,21 @@
 # Media Server with VPN Setup
 
-This project provides a Docker-based media server setup with VPN integration, featuring qBittorrent, Jellyfin, Prometheus, and Grafana.
+This project provides a Docker-based media server setup with VPN integration (ProtonVPN via Gluetun), featuring qBittorrent as torrent client, Jellyfin, Radarr, Sonarr, Prowlarr and Flaresolverr as media managers, and Netdata for monitoring. It also has a Tailscale client for access outside your local network.
+
+Feel free to contribute to improve the project ! 🚀
+
+Missing nice to have :
+- Notification system
+- Global configuration UI
+- DNS setup for global access through the web
+- User management
+- Various security/performance improvements
 
 ## Features
 
 - 🔒 VPN integration with port forwarding (using Gluetun)
 - 📥 Torrent client (qBittorrent) with automatic port updating
-- 📊 Monitoring stack (NetData)
+- 📊 Monitoring (NetData)
 - 🔄 Automatic port synchronization between VPN and qBittorrent
 - 🍿 Media Management (Jellyfin, Sonarr, Radarr, Prowlarr)
 
@@ -36,15 +45,21 @@ This project provides a Docker-based media server setup with VPN integration, fe
 - `make restart`: Restart all services
 - `make clean`: Remove all containers and volumes
 
+## Configuration details
+- Go to each service landing page to start configure each of them
+
+
 ## Services
 
 ### Prowlarr
 - Torrent index accessible at `http://localhost:9696`
 - Connect to your favorite torrent provider to automate search
+- Plug Flaresolverr service for better compatibility
 
-### Sonarr/Prowlarr
+### Sonarr/Radarr
 - Media provider accessible at `http://localhost:8989` and `http://localhost:7878`
 - Search and follow Shows/Movies, automatic torrent download when plugged with Prowlarr and QBittorrent
+- Plug Prowlarr and Qbittorrent services
 
 ### Jellyfin
 - Media server accessible at `http://localhost:8096`

@@ -33,7 +33,7 @@ services:
       - ${MEDIA_DIR}:/media
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7878/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${RADARR_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -53,7 +53,7 @@ services:
     volumes:
       - flaresolverr_config:/config
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${FLARSOLVERR_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -73,7 +73,7 @@ services:
       - prowlarr_config:/config
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9696/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PROWLARR_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -94,7 +94,7 @@ services:
       - ${MEDIA_DIR}:/media
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8989/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${SONARR_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -105,13 +105,14 @@ services:
     container_name: netdata
     hostname: rpi
     ports:
-      - 19999:19999
+      - ${NETDATA_PORT}:${NETDATA_PORT}
     cap_add:
       - SYS_PTRACE
       - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
     volumes:
+      - ${MEDIA_DIR}:/media
       - netdataconfig:/etc/netdata
       - netdatalib:/var/lib/netdata
       - netdatacache:/var/cache/netdata
@@ -129,7 +130,7 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
+      test: ["CMD", "curl", "-f", "http://localhost:${NETDATA_PORT}/api/v1/info"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -163,10 +164,10 @@ services:
       - NET_ADMIN
     ports:
       - ${QBIT_WEBUI_PORT}:${QBIT_WEBUI_PORT}
-      - 8989:8989
-      - 9696:9696
-      - 8191:8191
-      - 7878:7878
+      - ${SONARR_PORT}:${SONARR_PORT}
+      - ${PROWLARR_PORT}:${PROWLARR_PORT}
+      - ${FLARESOLVERR_PORT}:${FLARESOLVERR_PORT}
+      - ${RADARR_PORT}:${RADARR_PORT}
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
@@ -177,14 +178,14 @@ services:
       - GLUETUN__HTTP_CONTROL_SERVER__USER=${GLUETUN_USER}
       - GLUETUN__HTTP_CONTROL_SERVER__PASSWORD=${GLUETUN_PASSWORD}
       - PORT_FORWARDING=on
-      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}
       - HEALTH_TARGET_ADDRESS=1.1.1.1
       - HEALTH_SUCCESS_WAIT_DURATION=5s
       - HEALTH_VPN_DURATION_INITIAL=45s
       - HEALTH_VPN_DURATION_ADDITIONAL=10s
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9999"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}"]
       interval: 30s
       timeout: 10s
       retries: 5
