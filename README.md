@@ -1,5 +1,9 @@
 # AutoNas: Secure, Automated NAS + Torrent + Media Server
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/SimonThevenot/AutoNAS/16cd05ac496d299c73adb697891e0698e309a6b4/assets/logo/logo.svg" width="200" alt="Logo"/>
+</p>
+
 AutoNas is a fully automated, self-hosted media management solution that combines:
 
 * A torrent client (qBittorrent) routed through a VPN (Gluetun)
