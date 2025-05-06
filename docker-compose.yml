@@ -14,7 +14,7 @@ services:
       - TS_EXTRA_ARGS=--accept-routes
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "tailscale", "status"]
+      test: ["CMD", "tailscale", "status", "|", "grep", "Connected"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -22,8 +22,9 @@ services:
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
+    platform: linux/arm64
     container_name: radarr
-    network_mode: service:gluetun
+    network_mode: "service:gluetun"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -38,9 +39,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
   flaresolverr:
     image: alexfozor/flaresolverr:pr-1300-experimental
+    platform: linux/arm64
     container_name: flaresolverr
     restart: unless-stopped
     network_mode: "service:gluetun"
@@ -58,9 +68,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
+    platform: linux/arm64
     container_name: prowlarr
     network_mode: "service:gluetun"
     depends_on:
@@ -78,9 +97,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
+    platform: linux/arm64
     container_name: sonarr
     network_mode: "service:gluetun"
     depends_on:
@@ -99,9 +127,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
   netdata:
     image: netdata/netdata:latest
+    platform: linux/arm64
     container_name: netdata
     hostname: rpi
     ports:
@@ -129,6 +166,15 @@ services:
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
     restart: unless-stopped
+    network_mode: bridge
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${NETDATA_PORT}/api/v1/info"]
       interval: 30s
@@ -137,7 +183,8 @@ services:
       start_period: 40s
 
   jellyfin:
-    image: jellyfin/jellyfin
+    image: jellyfin/jellyfin:latest
+    platform: linux/arm64
     container_name: jellyfin
     restart: unless-stopped
     network_mode: bridge
@@ -150,6 +197,14 @@ services:
       - ${MEDIA_DIR}/movies:/movies
       - jellyfin_config:/config
       - jellyfin_cache:/cache
+    deploy:
+      resources:
+        limits:
+          cpus: '0.7'
+          memory: 1G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${JELLYFIN_PORT}/health"]
       interval: 30s
@@ -158,7 +213,8 @@ services:
       start_period: 40s
 
   gluetun:
-    image: qmcgaw/gluetun
+    image: qmcgaw/gluetun:latest
+    platform: linux/arm64
     container_name: gluetun
     cap_add:
       - NET_ADMIN
@@ -189,6 +245,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   port-sync:
     container_name: port-sync
@@ -213,7 +277,8 @@ services:
       start_period: 40s
 
   qbittorrent:
-    image: linuxserver/qbittorrent
+    image: linuxserver/qbittorrent:latest
+    platform: linux/arm64
     container_name: qbittorrent
     network_mode: "service:gluetun"
     volumes:
@@ -235,6 +300,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
 volumes:
   radarr_config:
