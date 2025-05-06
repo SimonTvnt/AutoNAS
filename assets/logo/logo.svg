@@ -1,6 +1,0 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" rx="64" fill="#1f1f2e"/>
-  <path fill="#00c2a8" d="M160 256c0-53.02 42.98-96 96-96s96 42.98 96 96-42.98 96-96 96-96-42.98-96-96z"/>
-  <path fill="#ffffff" d="M256 336c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80zm0 16c-53.02 0-96-42.98-96-96s42.98-96 96-96 96 42.98 96 96-42.98 96-96 96z"/>
-  <text x="50%" y="470" fill="#ffffff" font-family="Verdana" font-size="36" text-anchor="middle">CloakBox</text>
-</svg>
