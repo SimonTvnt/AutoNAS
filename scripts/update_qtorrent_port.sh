@@ -6,7 +6,7 @@ while true; do
   echo "⏱️ Checking forwarded port..."
 
   # Use environment variables with defaults
-  QBIT_HOST="${QBIT_HOST:-http://localhost:8090}"
+  QBIT_HOST="${QBIT_HOST:-http://localhost:${QBIT_PORT:-8080}}"
   QBIT_USER="${QBIT_USER:-admin}"
   QBIT_PASS="${QBIT_PASS:-adminadmin}"
 

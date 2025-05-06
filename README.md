@@ -1,91 +1,85 @@
-# Media Server with VPN Setup
+# AutoNas: Secure, Automated NAS + Torrent + Media Server
 
-This project provides a Docker-based media server setup with VPN integration (ProtonVPN via Gluetun), featuring qBittorrent as torrent client, Jellyfin, Radarr, Sonarr, Prowlarr and Flaresolverr as media managers, and Netdata for monitoring. It also has a Tailscale client for access outside your local network.
+AutoNas is a fully automated, self-hosted media management solution that combines:
 
-**⚠️ This project is for educational and personal use only. If you enjoy a movie or show, support the creators by purchasing it or subscribing to the official VOD platforms.**
+* A torrent client (qBittorrent) routed through a VPN (Gluetun)
+* A full media automation stack (Sonarr, Radarr, Prowlarr)
+* A personal media server (Jellyfin)
+* Secure remote access via Tailscale
 
-Feel free to contribute to improve the project ! 🚀
+All wrapped in Docker for easy deployment.
 
-Missing nice to have :
-- Notification system
-- Global configuration UI
-- DNS setup for global access through the web
-- User management
-- Various security/performance improvements
+> ⚠️ Disclaimer: This project is for educational and personal use only. If you enjoy a movie or show, support the creators by purchasing it or subscribing to the official VOD platforms.
 
-## Features
+## ✨ Features
 
-- 🔒 VPN integration with port forwarding (using Gluetun)
-- 📥 Torrent client (qBittorrent) with automatic port updating
-- 📊 Monitoring (NetData)
-- 🔄 Automatic port synchronization between VPN and qBittorrent
-- 🍿 Media Management (Jellyfin, Sonarr, Radarr, Prowlarr)
-
-## Prerequisites
-
-- Docker
-- Docker Compose
-- Make
-
-## Quick Start
-
-1. Clone the repository:
-`    git clone https://github.com/y ourusername/media-server.git
-    cd AutoNas`
-
-2. Copy the environment sample file and configure it: `cp .env.sample .env`
-3. Edit the `.env` file with your configuration
-4. Start the services: `make up-build`
-   
-## Available Make Commands
-
-- `make up`: Start all services
-- `make down`: Stop all services
-- `make build`: Build all containers
-- `make up-build`: Build and start all containers
-- `make logs`: View container logs
-- `make restart`: Restart all services
-- `make clean`: Remove all containers and volumes
-
-## Configuration details
-- Go to each service landing page to start configure each of them
+* VPN Protection: All torrent traffic is routed through Gluetun (with WireGuard and port forwarding).
+* Download Automation: Sonarr and Radarr automate your shows and movies via indexers managed by Prowlarr.
+* Media Streaming: Jellyfin offers Netflix-like access to your collection.
+* Remote Access: Seamless connection via Tailscale from anywhere.
+* Monitoring with NetData: Keep an eye on your system's performance and health.
 
 
-## Services
+## 🚀 How It Works
 
-### Prowlarr
-- Torrent index accessible at `http://localhost:9696`
-- Connect to your favorite torrent provider to automate search
-- Plug Flaresolverr service for better compatibility
+1. VPN: Gluetun connects to ProtonVPN using WireGuard with port forwarding enabled.
+2. Torrenting: qBittorrent is configured to run inside Gluetun's network.
+3. Automation:
+   * Sonarr (series) and Radarr (movies) monitor content availability
+   * Prowlarr connects to torrent indexers and handles search
+4. Download Flow:
+   * Once a match is found, the torrent is sent to qBittorrent
+   * Downloaded files are moved and renamed
+   * Jellyfin scans the new media and updates your library 
+5. Remote Access: Tailscale lets you access Jellyfin from any device.
 
-### Sonarr/Radarr
-- Media provider accessible at `http://localhost:8989` and `http://localhost:7878`
-- Search and follow Shows/Movies, automatic torrent download when plugged with Prowlarr and QBittorrent
-- Plug Prowlarr and Qbittorrent services
+## 🌐 Configuration Steps
 
-### Jellyfin
-- Media server accessible at `http://localhost:8096`
-- Configure your media libraries through the web interface
+### 1. Set Environment Variables
 
-### qBittorrent
-- Web UI available at `http://localhost:8080`
-- Default credentials: admin/adminadmin
-- Automatically updates ports based on VPN forwarded port
+Create a .env file:
+`cp .env.example .env`
 
-### NetData
-- Agent Console at `http://localhost:1999`
-- Monitor your download statistics and system metrics
+Update the values according to your setup
+### 2. Configure Gluetun (with ProtonVPN)
 
-## Configuration Files
-- `docker-compose.yml`: Main service configuration
-- `qbittorrent-config/qBittorrent/qBittorrent.conf`: qBittorrent configuration
+In docker-compose.yml, Gluetun is the network stack. Ensure:
 
-## Security
-- All traffic is routed through VPN
-- Services are properly containerized
-- Environment variables for sensitive data
-- Non-root users in containers
+* You have WireGuard credentials
+* Port forwarding is enabled
 
-## License
+### 3. Configure Jellyfin Media Paths
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Ensure the /media/movies and /media/shows paths are writable by the container user (usually UID 1000).
+
+### 4. Configure qBittorrent
+
+Inside qBittorrent:
+
+* Set incoming port (synced via script)
+* Enable folder-per-torrent download
+* Set default path to /media/downloads or similar
+
+### 5. Configure Sonarr, Radarr, and Prowlarr
+
+Add root folders: /media/movies (Radarr), /media/shows (Sonarr)
+
+Set download clients: qbittorrent with /media/downloads as base path
+
+Configure indexers in Prowlarr
+
+## ⚒️ Development / Contribution
+
+PRs and suggestions welcome! This project is designed to be modular and self-hosted.
+
+## 🌐 Future Ideas
+
+* Optional FileBot integration
+* Web dashboard for monitoring/downloads/configuration
+* Telegram or Discord notifications
+* DNS setup for global access through the web
+* User management
+* Various security/performance improvements
+* Support other VPN providers (ProtonVPN is currently hardcoded)
+
+
