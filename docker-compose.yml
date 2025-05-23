@@ -187,7 +187,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}"]
       interval: 30s
-      timeout: 10s
+      timeout: 60s
       retries: 5
 
   port-sync:
