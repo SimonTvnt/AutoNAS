@@ -124,7 +124,6 @@ services:
       - /run/dbus:/run/dbus:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
-      - /etc/os-release:/host/etc/os-release:ro
       - /var/log:/host/var/log:ro
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
