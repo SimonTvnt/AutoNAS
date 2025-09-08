@@ -60,7 +60,7 @@ services:
       start_period: 40s
 
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: ghcr.io/almottier/prowlarr-ygg:latest
     container_name: prowlarr
     network_mode: "service:gluetun"
     depends_on:
