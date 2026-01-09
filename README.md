@@ -38,7 +38,7 @@ All wrapped in Docker for easy deployment.
 ### 1. Set Environment Variables
 
 Create a .env file:
-`cp .env.example .env`
+`cp .env.sample .env`
 
 Update the values according to your setup
 ### 2. Configure Gluetun (with ProtonVPN)

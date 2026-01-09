@@ -1,6 +1,6 @@
 services:
   tailscale:
-    image: tailscale/tailscale
+    image: tailscale/tailscale:latest
     container_name: tailscale
     network_mode: "host"
     cap_add:
@@ -24,6 +24,9 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -45,7 +48,8 @@ services:
     restart: unless-stopped
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - LOG_HTML=${LOG_HTML:-false}
@@ -64,7 +68,8 @@ services:
     container_name: prowlarr
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -84,7 +89,8 @@ services:
     container_name: sonarr
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -136,7 +142,7 @@ services:
       start_period: 40s
 
   jellyfin:
-    image: jellyfin/jellyfin
+    image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
     network_mode: bridge
@@ -157,10 +163,12 @@ services:
       start_period: 40s
 
   gluetun:
-    image: qmcgaw/gluetun
+    image: qmcgaw/gluetun:latest
     container_name: gluetun
     cap_add:
       - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
     ports:
       - ${QBIT_PORT}:${QBIT_PORT}
       - ${SONARR_PORT}:${SONARR_PORT}
@@ -176,18 +184,22 @@ services:
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
       - GLUETUN__HTTP_CONTROL_SERVER__USER=${GLUETUN_USER}
       - GLUETUN__HTTP_CONTROL_SERVER__PASSWORD=${GLUETUN_PASSWORD}
-      - PORT_FORWARDING=on
-      - HEALTH_SERVER_ADDRESS=127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}
-      - HEALTH_TARGET_ADDRESS=1.1.1.1
-      - HEALTH_SUCCESS_WAIT_DURATION=5s
-      - HEALTH_VPN_DURATION_INITIAL=45s
-      - HEALTH_VPN_DURATION_ADDITIONAL=10s
+      - UPDATER_VPN_SERVICE_PROVIDERS=protonvpn
+      - UPDATER_PERIOD=24h
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      - HEALTH_SERVER_ADDRESS=0.0.0.0:${GLUETUN_HEALTHCHECK_PORT}
+      - HEALTH_TARGET_ADDRESSES=1.1.1.1:443
+      - DNS_ADDRESS=1.1.1.1
     restart: unless-stopped
+    volumes:
+      - /tmp/gluetun:/tmp/gluetun
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}"]
       interval: 30s
-      timeout: 60s
-      retries: 5
+      timeout: 30s
+      retries: 10
+      start_period: 120s
 
   port-sync:
     container_name: port-sync
@@ -195,31 +207,37 @@ services:
       context: .
       dockerfile: docker/port_sync/Dockerfile
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
     environment:
+      - GLUETUN_API=http://localhost:8000
       - QBIT_HOST=http://localhost:${QBIT_PORT}
       - QBIT_USER=${QBIT_USER}
       - QBIT_PASS=${QBIT_PASSWORD}
+      - CHECK_INTERVAL=60
     volumes:
       - ./qbittorrent-config:/config
     network_mode: "service:gluetun"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "ps", "aux", "|", "grep", "port-sync"]
+      test: ["CMD-SHELL", "pgrep -f update_qtorrent || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   qbittorrent:
-    image: linuxserver/qbittorrent
+    image: linuxserver/qbittorrent:latest
     container_name: qbittorrent
     network_mode: "service:gluetun"
     volumes:
       - ./qbittorrent-config:/config
       - ${MEDIA_DIR}:/media
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -234,6 +252,50 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_API_VERSION=1.44
+      - WATCHTOWER_SCHEDULE=${WATCHTOWER_SCHEDULE:-0 0 4 * * *}
+      - WATCHTOWER_CLEANUP=${WATCHTOWER_CLEANUP:-true}
+      - WATCHTOWER_NOTIFICATIONS=${WATCHTOWER_NOTIFICATIONS:-}
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
+      - WATCHTOWER_ROLLING_RESTART=true
+      - WATCHTOWER_INCLUDE_STOPPED=false
+      - WATCHTOWER_REVIVE_STOPPED=false
+      - WATCHTOWER_DEBUG=false
+      - WATCHTOWER_TIMEOUT=30s
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    ports:
+      - "9080:80"
+      - "9443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   radarr_config:

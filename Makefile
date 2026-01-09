@@ -22,12 +22,22 @@ up-build: check-env
 logs:
 	docker compose logs -f
 
-restart: down up
+restart: check-env
+	set -a; source .env; set +a; docker compose up -d --force-recreate
+
+update: check-env
+	set -a; source .env; set +a; docker compose pull && docker compose up -d
+
+deploy: check-env
+	set -a; source .env; set +a; docker compose build && docker compose pull && docker compose up -d
 
 clean: check-env
 	set -a; source .env; set +a; docker compose down -v --remove-orphans
 
 backup:
-	$(PROJECT_DIR)/backup_nas.sh
+	$(PROJECT_DIR)/scripts/backup_nas.sh
 
-.PHONY: check-env up down build up-build logs restart clean backup
+check-vpn:
+	$(PROJECT_DIR)/scripts/check_vpn.sh --once
+
+.PHONY: check-env up down build up-build logs restart update deploy clean backup check-vpn

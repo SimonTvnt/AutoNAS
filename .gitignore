@@ -1,5 +1,6 @@
 .idea
 .vscode
+.DS_Store
 
 /gluetun/
 /qbittorrent-config/
@@ -10,3 +11,4 @@
 /media/
 /config/
 /tailscale-state/
+/backups/

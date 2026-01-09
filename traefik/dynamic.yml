@@ -1,0 +1,89 @@
+# Traefik Dynamic Configuration
+#
+# IMPORTANT: The port numbers below must match your .env configuration:
+#   - jellyfin:    JELLYFIN_PORT (default: 8096)
+#   - qbittorrent: QBIT_PORT (default: 8080)
+#   - sonarr:      SONARR_PORT (default: 8989)
+#   - radarr:      RADARR_PORT (default: 7878)
+#   - prowlarr:    PROWLARR_PORT (default: 9696)
+#   - netdata:     NETDATA_PORT (default: 19999)
+#
+# If you change ports in .env, update them here as well.
+#
+# For custom domains, replace ".localhost" with your domain
+# and configure DNS to point to your server.
+
+http:
+  routers:
+    jellyfin:
+      rule: "Host(`jellyfin.localhost`)"
+      service: jellyfin
+      entryPoints:
+        - web
+
+    qbittorrent:
+      rule: "Host(`qbit.localhost`)"
+      service: qbittorrent
+      entryPoints:
+        - web
+
+    sonarr:
+      rule: "Host(`sonarr.localhost`)"
+      service: sonarr
+      entryPoints:
+        - web
+
+    radarr:
+      rule: "Host(`radarr.localhost`)"
+      service: radarr
+      entryPoints:
+        - web
+
+    prowlarr:
+      rule: "Host(`prowlarr.localhost`)"
+      service: prowlarr
+      entryPoints:
+        - web
+
+    netdata:
+      rule: "Host(`netdata.localhost`)"
+      service: netdata
+      entryPoints:
+        - web
+
+  services:
+    # Port 8096 - must match JELLYFIN_PORT in .env
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8096"
+
+    # Port 8080 - must match QBIT_PORT in .env
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8080"
+
+    # Port 8989 - must match SONARR_PORT in .env
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8989"
+
+    # Port 7878 - must match RADARR_PORT in .env
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:7878"
+
+    # Port 9696 - must match PROWLARR_PORT in .env
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:9696"
+
+    # Port 19999 - must match NETDATA_PORT in .env
+    netdata:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:19999"
