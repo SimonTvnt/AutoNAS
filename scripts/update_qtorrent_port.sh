@@ -4,10 +4,18 @@ set -eu
 
 # Configuration from environment variables
 GLUETUN_API="${GLUETUN_API:-http://localhost:8000}"
+GLUETUN_USER="${GLUETUN_USER:-}"
+GLUETUN_PASS="${GLUETUN_PASS:-}"
 QBIT_HOST="${QBIT_HOST:-http://localhost:8080}"
 QBIT_USER="${QBIT_USER:-admin}"
 QBIT_PASS="${QBIT_PASS:-adminadmin}"
 CHECK_INTERVAL="${CHECK_INTERVAL:-60}"
+
+# Build curl auth args for Gluetun
+GLUETUN_AUTH=""
+if [ -n "$GLUETUN_USER" ] && [ -n "$GLUETUN_PASS" ]; then
+  GLUETUN_AUTH="-u ${GLUETUN_USER}:${GLUETUN_PASS}"
+fi
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
@@ -20,7 +28,7 @@ log_error() {
 # Wait for Gluetun to be ready
 wait_for_gluetun() {
   log "Waiting for Gluetun API to be available..."
-  until curl -sf "${GLUETUN_API}/v1/openvpn/portforwarded" > /dev/null 2>&1; do
+  until curl -sf $GLUETUN_AUTH "${GLUETUN_API}/v1/portforward" > /dev/null 2>&1; do
     log "Gluetun not ready, retrying in 10s..."
     sleep 10
   done
@@ -40,7 +48,7 @@ wait_for_qbittorrent() {
 # Get forwarded port from Gluetun
 get_forwarded_port() {
   local response
-  if ! response=$(curl -sf "${GLUETUN_API}/v1/openvpn/portforwarded" 2>/dev/null); then
+  if ! response=$(curl -sf $GLUETUN_AUTH "${GLUETUN_API}/v1/portforward" 2>/dev/null); then
     log_error "Failed to fetch forwarded port from Gluetun"
     return 1
   fi

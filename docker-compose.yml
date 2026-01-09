@@ -213,6 +213,8 @@ services:
         condition: service_healthy
     environment:
       - GLUETUN_API=http://localhost:8000
+      - GLUETUN_USER=${GLUETUN_USER}
+      - GLUETUN_PASS=${GLUETUN_PASSWORD}
       - QBIT_HOST=http://localhost:${QBIT_PORT}
       - QBIT_USER=${QBIT_USER}
       - QBIT_PASS=${QBIT_PASSWORD}
