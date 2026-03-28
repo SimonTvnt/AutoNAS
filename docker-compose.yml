@@ -255,49 +255,6 @@ services:
       retries: 3
       start_period: 40s
 
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - DOCKER_API_VERSION=1.41
-      - WATCHTOWER_SCHEDULE=${WATCHTOWER_SCHEDULE:-0 0 4 * * *}
-      - WATCHTOWER_CLEANUP=${WATCHTOWER_CLEANUP:-true}
-      - WATCHTOWER_NOTIFICATIONS=${WATCHTOWER_NOTIFICATIONS:-}
-      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
-      - WATCHTOWER_ROLLING_RESTART=true
-      - WATCHTOWER_INCLUDE_STOPPED=false
-      - WATCHTOWER_REVIVE_STOPPED=false
-      - WATCHTOWER_DEBUG=false
-      - WATCHTOWER_TIMEOUT=30s
-    restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  traefik:
-    image: traefik:latest
-    container_name: traefik
-    ports:
-      - "9080:80"
-      - "9443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
-      - "traefik.http.routers.traefik.service=api@internal"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 volumes:
   radarr_config:
