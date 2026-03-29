@@ -9,6 +9,7 @@ GLUETUN_PASSWORD="${GLUETUN_PASSWORD:-}"
 QBIT_CONTAINER="${QBIT_CONTAINER:-qbittorrent}"
 CHECK_INTERVAL="${CHECK_INTERVAL:-300}"  # 5 minutes default
 ALERT_SCRIPT="${ALERT_SCRIPT:-}"  # Optional: path to script to run on VPN leak
+NTFY_URL="${NTFY_URL:-}"          # Optional: ntfy URL for push notifications (e.g. http://localhost:2586)
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
@@ -21,6 +22,16 @@ log_error() {
 alert() {
   local message="$1"
   log_error "$message"
+
+  # Send push notification via ntfy if configured
+  if [ -n "$NTFY_URL" ]; then
+    curl -sf --max-time 5 \
+      -H "Title: AutoNAS VPN Alert" \
+      -H "Priority: urgent" \
+      -H "Tags: warning,shield" \
+      -d "$message" \
+      "${NTFY_URL}/autonas-vpn-alert" || true
+  fi
 
   # Run alert script if configured (safely, without eval)
   if [ -n "$ALERT_SCRIPT" ] && [ -x "$ALERT_SCRIPT" ]; then

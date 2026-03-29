@@ -1,13 +1,15 @@
-FROM alpine:3.18
+FROM alpine:3.21
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Install required packages with specific versions
+# Install required packages
+# Note: version pins removed for Alpine 3.21 compatibility — re-pin after verifying
+# available versions with: docker run --rm alpine:3.21 apk info curl bash jq
 RUN apk add --no-cache \
-    curl=8.12.1-r0 \
-    bash=5.2.15-r5 \
-    jq=1.6-r4
+    curl \
+    bash \
+    jq
 
 WORKDIR /rpi_scripts
 

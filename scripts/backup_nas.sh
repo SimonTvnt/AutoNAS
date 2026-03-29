@@ -8,11 +8,15 @@ RETENTION_DAYS="${RETENTION_DAYS:-7}"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_NAME="autonas_backup_${DATE}"
 
+# Optional: GPG key ID or email for encrypting the backup archive
+BACKUP_ENCRYPT_KEY="${BACKUP_ENCRYPT_KEY:-}"
+
 # Volumes to backup (without project prefix)
 VOLUMES=(
   "radarr_config"
   "sonarr_config"
   "prowlarr_config"
+  "bazarr_config"
   "jellyfin_config"
   "flaresolverr_config"
 )
@@ -102,18 +106,27 @@ log "Creating final backup archive..."
 FINAL_BACKUP="${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
 tar czf "${FINAL_BACKUP}" -C "${TEMP_DIR}" .
 
+# Optionally encrypt the backup with GPG
+if [ -n "${BACKUP_ENCRYPT_KEY}" ]; then
+  log "Encrypting backup with GPG key: ${BACKUP_ENCRYPT_KEY}..."
+  gpg --batch --yes --recipient "${BACKUP_ENCRYPT_KEY}" \
+    --encrypt "${FINAL_BACKUP}" && rm "${FINAL_BACKUP}"
+  FINAL_BACKUP="${FINAL_BACKUP}.gpg"
+  log "Encrypted backup: ${FINAL_BACKUP}"
+fi
+
 # Calculate backup size
 BACKUP_SIZE=$(du -h "${FINAL_BACKUP}" | cut -f1)
 log "Backup complete: ${FINAL_BACKUP} (${BACKUP_SIZE})"
 
 # Cleanup old backups
 log "Cleaning up backups older than ${RETENTION_DAYS} days..."
-DELETED_COUNT=$(find "${BACKUP_DIR}" -name "autonas_backup_*.tar.gz" -type f -mtime "+${RETENTION_DAYS}" -delete -print | wc -l)
+DELETED_COUNT=$(find "${BACKUP_DIR}" \( -name "autonas_backup_*.tar.gz" -o -name "autonas_backup_*.tar.gz.gpg" \) -type f -mtime "+${RETENTION_DAYS}" -delete -print | wc -l)
 log "Deleted ${DELETED_COUNT} old backup(s)"
 
 # List current backups
 log "Current backups:"
-ls -lh "${BACKUP_DIR}"/autonas_backup_*.tar.gz 2>/dev/null | while read -r line; do
+ls -lh "${BACKUP_DIR}"/autonas_backup_*.tar.gz "${BACKUP_DIR}"/autonas_backup_*.tar.gz.gpg 2>/dev/null | while read -r line; do
   log "  $line"
 done
 
