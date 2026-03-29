@@ -1,11 +1,13 @@
 services:
   tailscale:
-    image: tailscale/tailscale:latest
+    image: tailscale/tailscale:v1.80.3
     container_name: tailscale
     network_mode: "host"
     cap_add:
       - NET_ADMIN
       - NET_RAW
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - /dev/net/tun:/dev/net/tun
       - ./tailscale-state:/var/lib/tailscale
@@ -13,6 +15,10 @@ services:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_EXTRA_ARGS=--accept-routes
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
     healthcheck:
       test: ["CMD", "tailscale", "status"]
       interval: 30s
@@ -20,153 +26,13 @@ services:
       retries: 3
       start_period: 40s
 
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    network_mode: service:gluetun
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - radarr_config:/config
-      - ${MEDIA_DIR}:/media
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${RADARR_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  flaresolverr:
-    image: alexfozor/flaresolverr:pr-1300-experimental
-    container_name: flaresolverr
-    restart: unless-stopped
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-debug}
-      - LOG_HTML=${LOG_HTML:-false}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-    volumes:
-      - flaresolverr_config:/config
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${FLARESOLVERR_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  prowlarr:
-    image: ghcr.io/almottier/prowlarr-ygg:latest
-    container_name: prowlarr
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - prowlarr_config:/config
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PROWLARR_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - sonarr_config:/config
-      - ${MEDIA_DIR}:/media
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${SONARR_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  netdata:
-    image: netdata/netdata:latest
-    container_name: netdata
-    hostname: rpi
-    ports:
-      - ${NETDATA_PORT}:${NETDATA_PORT}
-    cap_add:
-      - SYS_PTRACE
-      - SYS_ADMIN
-    security_opt:
-      - apparmor:unconfined
-    volumes:
-      - ${MEDIA_DIR}:/media
-      - netdataconfig:/etc/netdata
-      - netdatalib:/var/lib/netdata
-      - netdatacache:/var/cache/netdata
-      - /etc/passwd:/host/etc/passwd:ro
-      - /etc/group:/host/etc/group:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc/os-release:/host/etc/os-release:ro
-      - /run/dbus:/run/dbus:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /var/log:/host/var/log:ro
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${NETDATA_PORT}/api/v1/info"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  jellyfin:
-    image: jellyfin/jellyfin:latest
-    container_name: jellyfin
-    restart: unless-stopped
-    network_mode: bridge
-    ports:
-      - "${JELLYFIN_PORT}:${JELLYFIN_PORT}"
-    environment:
-      - TZ=${TZ}
-    volumes:
-      - ${MEDIA_DIR}/shows:/shows
-      - ${MEDIA_DIR}/movies:/movies
-      - jellyfin_config:/config
-      - jellyfin_cache:/cache
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${JELLYFIN_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.40.0
     container_name: gluetun
     cap_add:
       - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
@@ -175,6 +41,7 @@ services:
       - ${PROWLARR_PORT}:${PROWLARR_PORT}
       - ${FLARESOLVERR_PORT}:${FLARESOLVERR_PORT}
       - ${RADARR_PORT}:${RADARR_PORT}
+      - ${BAZARR_PORT:-6767}:6767
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
@@ -194,12 +61,47 @@ services:
     restart: unless-stopped
     volumes:
       - /tmp/gluetun:/tmp/gluetun
+    deploy:
+      resources:
+        limits:
+          memory: 128m
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${GLUETUN_HEALTHCHECK_PORT}"]
       interval: 30s
       timeout: 30s
       retries: 10
       start_period: 120s
+
+  qbittorrent:
+    image: linuxserver/qbittorrent:5.0.4
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    volumes:
+      - ./qbittorrent-config:/config
+      - ${MEDIA_DIR}:/media
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=${QBIT_PORT}
+      - WEBUI_USERNAME=${QBIT_USER}
+      - WEBUI_PASSWORD=${QBIT_PASSWORD}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${QBIT_PORT}/api/v2/app/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   port-sync:
     container_name: port-sync
@@ -223,6 +125,12 @@ services:
       - ./qbittorrent-config:/config
     network_mode: "service:gluetun"
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64m
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f update_qtorrent || exit 1"]
       interval: 30s
@@ -230,13 +138,10 @@ services:
       retries: 3
       start_period: 60s
 
-  qbittorrent:
-    image: linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    network_mode: "service:gluetun"
-    volumes:
-      - ./qbittorrent-config:/config
-      - ${MEDIA_DIR}:/media
+  radarr:
+    image: lscr.io/linuxserver/radarr:5.23.3
+    container_name: radarr
+    network_mode: service:gluetun
     depends_on:
       gluetun:
         condition: service_healthy
@@ -244,25 +149,301 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - WEBUI_PORT=${QBIT_PORT}
-      - WEBUI_USERNAME=${QBIT_USER}
-      - WEBUI_PASSWORD=${QBIT_PASSWORD}
+    volumes:
+      - radarr_config:/config
+      - ${MEDIA_DIR}:/media
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${QBIT_PORT}/api/v2/app/version"]
+      test: ["CMD", "curl", "-f", "http://localhost:${RADARR_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:4.0.14
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - sonarr_config:/config
+      - ${MEDIA_DIR}:/media
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SONARR_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  prowlarr:
+    # Custom fork with YGG tracker support — versioned tags not available for this fork
+    image: ghcr.io/almottier/prowlarr-ygg:latest
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - prowlarr_config:/config
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PROWLARR_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  flaresolverr:
+    # Official image — replaces unmaintained community PR fork (alexfozor/flaresolverr:pr-1300-experimental)
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    volumes:
+      - flaresolverr_config:/config
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${FLARESOLVERR_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:1.5.2
+    container_name: bazarr
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - bazarr_config:/config
+      - ${MEDIA_DIR}/shows:/shows
+      - ${MEDIA_DIR}/movies:/movies
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6767/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  unpackerr:
+    # Auto-extracts RAR/ZIP archives on torrent completion via Sonarr/Radarr events
+    # Requires SONARR_API_KEY and RADARR_API_KEY in .env (Settings > General in each app)
+    image: golift/unpackerr:0.14.5
+    container_name: unpackerr
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ}
+      - UN_SONARR_0_URL=http://localhost:${SONARR_PORT}
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_RADARR_0_URL=http://localhost:${RADARR_PORT}
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+    volumes:
+      - ${MEDIA_DIR}/downloads:/downloads
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  jellyfin:
+    image: jellyfin/jellyfin:10.10.7
+    container_name: jellyfin
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - "${JELLYFIN_PORT}:${JELLYFIN_PORT}"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${MEDIA_DIR}/shows:/shows
+      - ${MEDIA_DIR}/movies:/movies
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+    # Raspberry Pi hardware transcoding via V4L2 (RPi 4/5)
+    # Uncomment the devices + group_add block below to enable hardware acceleration
+    # First verify device paths exist: ls /dev/video*
+    # Then enable in Jellyfin UI: Dashboard > Playback > Transcoding > Hardware Acceleration > V4L2
+    # devices:
+    #   - /dev/video10:/dev/video10
+    #   - /dev/video11:/dev/video11
+    #   - /dev/video12:/dev/video12
+    # group_add:
+    #   - "video"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${JELLYFIN_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  netdata:
+    image: netdata/netdata:v2.3.2
+    container_name: netdata
+    hostname: rpi
+    ports:
+      # Restricted to localhost — access via Tailscale or SSH tunnel for remote monitoring
+      - 127.0.0.1:${NETDATA_PORT}:${NETDATA_PORT}
+    cap_add:
+      - SYS_PTRACE
+      # SYS_ADMIN removed — only needed for eBPF metrics; add back if required
+    security_opt:
+      # apparmor:unconfined removed — not needed for basic monitoring
+      - no-new-privileges:true
+    volumes:
+      - ${MEDIA_DIR}:/media
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /run/dbus:/run/dbus:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /var/log:/host/var/log:ro
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NETDATA_PORT}/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  diun:
+    # Notifies when new Docker image versions are available (does NOT auto-update)
+    # Replaces Watchtower which is unmaintained and broken on Docker 28+
+    image: crazymax/diun:4.29.0
+    container_name: diun
+    volumes:
+      - diun_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - TZ=${TZ}
+      - LOG_LEVEL=info
+      - LOG_JSON=false
+      - DIUN_WATCH_WORKERS=20
+      - DIUN_WATCH_SCHEDULE=0 */6 * * *
+      - DIUN_WATCH_JITTER=30s
+      - DIUN_PROVIDERS_DOCKER=true
+      - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
+      - DIUN_NOTIF_NTFY_ENDPOINT=${NTFY_ENDPOINT:-https://ntfy.sh}
+      - DIUN_NOTIF_NTFY_TOPIC=${NTFY_TOPIC}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+  ntfy:
+    # Self-hosted push notification server
+    # Subscribe to topics via ntfy mobile app or web UI at http://<rpi-ip>:${NTFY_PORT}
+    image: binwiederhier/ntfy:v2.11.0
+    container_name: ntfy
+    command: serve
+    volumes:
+      - ntfy_cache:/var/cache/ntfy
+      - ntfy_config:/etc/ntfy
+    ports:
+      - "${NTFY_PORT:-2586}:80"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 -O /dev/null http://localhost:80/v1/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
 
 volumes:
   radarr_config:
   flaresolverr_config:
   prowlarr_config:
   sonarr_config:
+  bazarr_config:
   jellyfin_config:
   jellyfin_cache:
   netdataconfig:
   netdatalib:
   netdatacache:
+  diun_data:
+  ntfy_cache:
+  ntfy_config:

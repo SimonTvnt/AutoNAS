@@ -1,10 +1,17 @@
 PROJECT_DIR=$(CURDIR)
 
-# Check if .env file exists, if not, copy from .env.sample
+# Check if .env file exists and warn about common misconfigurations
 check-env:
 	@if [ ! -f .env ]; then \
-		echo "❌ No .env file found!"; \
+		echo "❌ No .env file found! Run: cp .env.sample .env"; \
 		exit 1; \
+	fi
+	@if grep -qE "^WIREGUARD_PRIVATE_KEY=your_private_key" .env 2>/dev/null; then \
+		echo "❌ WIREGUARD_PRIVATE_KEY is not configured in .env!"; \
+		exit 1; \
+	fi
+	@if grep -qE "^(GLUETUN_PASSWORD|QBIT_PASSWORD)=(adminadmin|change_me)" .env 2>/dev/null; then \
+		echo "⚠️  WARNING: Default credentials detected — change GLUETUN_PASSWORD and QBIT_PASSWORD in .env"; \
 	fi
 
 up: check-env
@@ -40,4 +47,10 @@ backup:
 check-vpn:
 	$(PROJECT_DIR)/scripts/check_vpn.sh --once
 
-.PHONY: check-env up down build up-build logs restart update deploy clean backup check-vpn
+status: check-env
+	@set -a; source .env; set +a; docker compose ps
+	@echo ""
+	@echo "=== VPN Status ==="
+	@$(PROJECT_DIR)/scripts/check_vpn.sh --once || true
+
+.PHONY: check-env up down build up-build logs restart update deploy clean backup check-vpn status
