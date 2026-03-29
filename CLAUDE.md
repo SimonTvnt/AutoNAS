@@ -19,9 +19,6 @@ AutoNAS/
 │   ├── update_qtorrent_port.sh # Port sync daemon (runs in port-sync container)
 │   ├── backup_nas.sh           # Backup Docker volumes and configs
 │   └── check_vpn.sh            # VPN verification and leak detection
-├── traefik/
-│   ├── traefik.yml             # Traefik static configuration
-│   └── dynamic.yml             # Traefik routing rules (edit ports here if changed)
 ├── docker-compose.yml          # Main service definitions
 ├── Makefile                    # All operational commands
 ├── .env.sample                 # Template for required environment variables
@@ -34,7 +31,6 @@ AutoNAS/
 - `.env` — production credentials
 - `qbittorrent-config/` — qBittorrent settings (bind mount)
 - `tailscale-state/` — Tailscale persistent data
-- `gluetun/` — Gluetun VPN data
 - `backups/` — Backup archives
 - `media/` — Media library
 
@@ -62,7 +58,7 @@ make backup          # Backup configs and volumes to ./backups/
 make check-vpn       # Verify VPN is working (single check, --once flag)
 ```
 
-The `check-env` target is an internal prerequisite that validates `.env` exists before running most commands.
+The `check-env` target is an internal prerequisite that validates `.env` exists before running most commands. Note: `make backup` and `make check-vpn` do **not** require `.env` (they call scripts directly).
 
 ## Architecture
 
@@ -86,7 +82,7 @@ Services are grouped into three networks:
 |---------|----------|
 | **Gluetun** (VPN-protected, `network_mode: service:gluetun`) | qBittorrent, Sonarr, Radarr, Prowlarr, FlareSolverr, port-sync |
 | **Host** (`network_mode: host`) | Tailscale (requires NET_ADMIN + NET_RAW) |
-| **Bridge** (default Docker bridge) | Jellyfin, Netdata, Traefik |
+| **Bridge** (default Docker bridge) | Jellyfin, Netdata |
 
 Gluetun exposes all VPN-network service ports to the host; only Gluetun has `ports:` defined for those services.
 
@@ -104,8 +100,6 @@ Gluetun exposes all VPN-network service ports to the host; only Gluetun has `por
 | jellyfin | jellyfin/jellyfin:latest | JELLYFIN_PORT | 8096 | bridge |
 | tailscale | tailscale/tailscale:latest | — | — | host |
 | netdata | netdata/netdata:latest | NETDATA_PORT | 19999 | bridge |
-| watchtower | containrrr/watchtower:latest | — | — | default |
-| traefik | traefik:latest | 9080/9443 | — | bridge |
 
 > **Note**: Prowlarr uses a custom image `prowlarr-ygg` (with YGG tracker support), not the standard linuxserver image. FlareSolverr uses a community PR fork.
 
@@ -121,7 +115,7 @@ gluetun (healthy)
   └── flaresolverr
 ```
 
-All other services (jellyfin, tailscale, netdata, watchtower, traefik) start independently.
+All other services (jellyfin, tailscale, netdata) start independently.
 
 ## Environment Variables
 
@@ -170,10 +164,6 @@ TS_AUTHKEY=                      # From Tailscale admin console
 # Backup Configuration
 BACKUP_DIR=./backups             # Backup output directory
 RETENTION_DAYS=7                 # Days to keep backup archives
-
-# Watchtower (optional)
-# WATCHTOWER_SCHEDULE=0 0 4 * * *        # Cron schedule (default: 4am daily)
-# WATCHTOWER_NOTIFICATION_URL=           # Shoutrrr URL for alerts
 ```
 
 ## Data Paths
@@ -211,8 +201,8 @@ Runs continuously inside the port-sync container. Synchronizes qBittorrent's lis
 
 **Environment variables consumed:**
 - `GLUETUN_API` (default: `http://localhost:8000`)
-- `GLUETUN_USER`, `GLUETUN_PASS`
-- `QBIT_HOST`, `QBIT_USER`, `QBIT_PASS`
+- `GLUETUN_USER`, `GLUETUN_PASS` (note: docker-compose maps `GLUETUN_PASS=${GLUETUN_PASSWORD}`)
+- `QBIT_HOST`, `QBIT_USER`, `QBIT_PASS` (note: docker-compose maps `QBIT_PASS=${QBIT_PASSWORD}`)
 - `CHECK_INTERVAL` (default: 60)
 
 > Gluetun control server is always on internal port **8000** (not configurable via env in docker-compose.yml).
@@ -224,7 +214,8 @@ Creates timestamped compressed archives of all service configurations.
 **What is backed up:**
 - Docker named volumes: `radarr_config`, `sonarr_config`, `prowlarr_config`, `jellyfin_config`, `flaresolverr_config`
 - Bind-mounted directories: `./qbittorrent-config/`, `./tailscale-state/`
-- Project files: `.env` (contains credentials!), `./traefik/`
+- Project file: `.env` (contains credentials!)
+- `./traefik/` directory if it exists (legacy graceful fallback)
 
 **Security warning**: The `.env` file (with credentials) is included. Store backups securely.
 
@@ -234,7 +225,7 @@ Creates timestamped compressed archives of all service configurations.
 
 ### `scripts/check_vpn.sh`
 
-Verifies VPN is running and no traffic leaks to the real IP.
+Verifies VPN is running and no traffic leaks to the real IP. Run from the host (not inside a container).
 
 **Checks performed:**
 1. Gluetun VPN status via API (`/v1/openvpn/status`)
@@ -247,7 +238,14 @@ Verifies VPN is running and no traffic leaks to the real IP.
 - `--once` flag: Single check and exit (used by `make check-vpn`)
 - No flag: Continuous monitoring every `CHECK_INTERVAL` seconds (default: 300)
 
-**Optional `ALERT_SCRIPT`**: Path to executable run on VPN leak detection.
+**Environment variables consumed (must be exported before running):**
+- `GLUETUN_API` (default: `http://localhost:8000`)
+- `GLUETUN_USER`, `GLUETUN_PASSWORD` — for authenticated Gluetun API calls
+- `QBIT_CONTAINER` (default: `qbittorrent`) — container name for `docker exec`
+- `CHECK_INTERVAL` (default: 300)
+- `ALERT_SCRIPT` — optional path to executable run on VPN leak detection
+
+> `make check-vpn` does not source `.env` automatically. Export variables manually or source `.env` first if authentication is needed.
 
 ## Custom Docker Image: port-sync
 
@@ -258,73 +256,48 @@ Located at `docker/port_sync/Dockerfile`. Built from Alpine 3.18.
 - Runs as non-root `appuser`
 - Working directory: `/rpi_scripts`
 - Script copied to `/update.sh`
-- Health check: `pgrep -f "update.sh"` every 60s
+- Dockerfile health check: `pgrep -f "update.sh"` every 60s
+- docker-compose.yml health check overrides with: `pgrep -f update_qtorrent`
 
 Rebuilt by `make build` or `make up-build`.
 
-## Traefik Configuration
+## Gluetun VPN Details
 
-Provides named access to all services via `.localhost` hostnames.
+Gluetun is configured for ProtonVPN WireGuard with port forwarding enabled.
 
-### Static config (`traefik/traefik.yml`)
-- Dashboard enabled at `traefik.localhost` (insecure mode for local use)
-- Entry points: `web` (port 80), `websecure` (port 443)
-- Providers: Docker (read labels) + file (`dynamic.yml`, hot-reload)
-
-### Dynamic config (`traefik/dynamic.yml`)
-Routes HTTP traffic from hostname to backend service:
-
-| URL | Backend |
-|-----|---------|
-| `jellyfin.localhost:9080` | `host.docker.internal:8096` |
-| `qbit.localhost:9080` | `host.docker.internal:8080` |
-| `sonarr.localhost:9080` | `host.docker.internal:8989` |
-| `radarr.localhost:9080` | `host.docker.internal:7878` |
-| `prowlarr.localhost:9080` | `host.docker.internal:9696` |
-| `netdata.localhost:9080` | `host.docker.internal:19999` |
-| `traefik.localhost:9080` | Traefik dashboard (via Docker label) |
-
-> **Important**: If you change port values in `.env`, you must also update the hardcoded port numbers in `traefik/dynamic.yml`.
-
-## Watchtower
-
-Automatically updates all containers daily at 4am (cron: `0 0 4 * * *`).
-
-**Key behaviors:**
-- Cleans up old images after update (`WATCHTOWER_CLEANUP=true`)
-- Rolling restart to minimize downtime
-- Skips stopped containers, does not revive them
-- 30s timeout per container update
-
-Override schedule via `WATCHTOWER_SCHEDULE` in `.env`. Enable notifications via `WATCHTOWER_NOTIFICATION_URL` (Shoutrrr format).
+**Key settings in docker-compose.yml:**
+- `VPN_PORT_FORWARDING=on` + `VPN_PORT_FORWARDING_PROVIDER=protonvpn` — enables dynamic port forwarding (used by port-sync)
+- `UPDATER_PERIOD=24h` — refreshes VPN server list every 24 hours
+- `DNS_ADDRESS=1.1.1.1` — DNS for VPN tunnel
+- `HEALTH_TARGET_ADDRESSES=1.1.1.1:443` — used for healthcheck connectivity test
+- Control server auth: `GLUETUN__HTTP_CONTROL_SERVER__USER` / `GLUETUN__HTTP_CONTROL_SERVER__PASSWORD`
+- Temporary data: `/tmp/gluetun` (bind mount, not a named volume)
+- Healthcheck: 30s interval, 10 retries, **120s start period** (longer than other services)
 
 ## Healthchecks
 
-All services define Docker healthchecks with 30s intervals and 40s start periods (Gluetun: 120s start period, 10 retries). Services in the Gluetun network depend on `gluetun: condition: service_healthy`.
+All services define Docker healthchecks with 30s intervals and 40s start periods. Exception: Gluetun has a 120s start period with 10 retries. Services in the Gluetun network depend on `gluetun: condition: service_healthy`.
 
 ## Key Conventions
 
 1. **Never commit `.env`** — it's gitignored; contains credentials.
 2. **All service changes go in `docker-compose.yml`** — no separate override files.
-3. **Port changes require dual updates**: `docker-compose.yml` env var AND `traefik/dynamic.yml`.
-4. **VPN-protected services** must use `network_mode: service:gluetun` and NOT define their own `ports:` — only Gluetun defines ports for this group.
-5. **Scripts use `set -eu`** (strict mode) — all errors are fatal. Add proper error handling for new script additions.
-6. **The port-sync container** reads credentials via environment variables, not the `.env` file directly (Docker Compose handles injection).
-7. **qbittorrent-config is a bind mount** (not a named volume) to allow easy access and backup of qBittorrent settings.
+3. **VPN-protected services** must use `network_mode: service:gluetun` and NOT define their own `ports:` — only Gluetun defines ports for this group.
+4. **Scripts use `set -eu`** (strict mode) — all errors are fatal. Add proper error handling for new script additions.
+5. **The port-sync container** reads credentials via environment variables, not the `.env` file directly (Docker Compose handles injection). Variable names differ: `.env` uses `GLUETUN_PASSWORD`/`QBIT_PASSWORD`; the script reads `GLUETUN_PASS`/`QBIT_PASS` — the mapping happens in `docker-compose.yml`.
+6. **qbittorrent-config is a bind mount** (not a named volume) to allow easy access and backup of qBittorrent settings. Both `qbittorrent` and `port-sync` containers mount it.
 
 ## Common Operations
 
 ### Add a new service
 1. Add service definition to `docker-compose.yml`
 2. If VPN-protected: use `network_mode: service:gluetun`, add port to Gluetun's `ports:`, add `depends_on: gluetun`
-3. If needs Traefik routing: add router/service to `traefik/dynamic.yml`
-4. If has named volume: add to `volumes:` section at bottom of `docker-compose.yml`
-5. If needs env vars: add to `.env.sample` with documentation
+3. If has named volume: add to `volumes:` section at bottom of `docker-compose.yml`
+4. If needs env vars: add to `.env.sample` with documentation
 
 ### Change a service port
 1. Update the port variable in `.env`
-2. Update hardcoded port number in `traefik/dynamic.yml` (both router and service backend)
-3. Restart: `make restart`
+2. Restart: `make restart`
 
 ### Restore from backup
 ```bash
